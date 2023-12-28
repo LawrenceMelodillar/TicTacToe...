@@ -1,0 +1,255 @@
+using System;
+using System.Linq;
+using System.Threading;
+
+namespace TIC_TAC_TOE
+{
+    class Program
+    {
+        static char[] arr = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+        static string player1Name, player2Name;
+        static int player1Score = 0, player2Score = 0;
+        static int player = 1;
+        static int choice;
+        static int flag = 0;
+        static int timerDuration = 10; // Time limit for each player's turn in seconds
+
+        static void Main(string[] args)
+        {
+            
+            Console.ForegroundColor = ConsoleColor.Yellow;
+
+            string logo = @"
+ ____  __  ___   ____  __    ___   ____  __  ____ 
+(_  _)(  )/ __) (_  _)/ _\  / __) (_  _)/  \(  __)
+  )(   )(( (__    )( /    \( (__    )( (  O )) _) 
+ (__) (__)\___)  (__)\_/\_/ \___)  (__) \__/(____)
+ ";
+            Console.WriteLine(logo);
+            Console.ResetColor();
+            Console.WriteLine("\nWelcome to Tic Tac Toe, please press any to begin");
+            Console.ReadKey();
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.BackgroundColor = ConsoleColor.White;
+            Console.WriteLine("DESCRIPTION: ");
+            Console.ResetColor();
+            Console.WriteLine("Tic Tac Toe is a two player turn based game." +
+                              "\nIt's you vs your opponent..." +
+                              "\nPress any key to continue");
+            Console.ReadKey();
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.BackgroundColor = ConsoleColor.White;
+            Console.WriteLine("RULES: ");
+            Console.ResetColor();
+            Console.WriteLine("Players are represented with a unique signature" +
+                              "\nPlayer 1 = X.  Player 2 = O" + "\n•Choose a number to where to put your next shot" + 
+                              "\n•Each player only have 10 seconds to choose");
+            Console.WriteLine("\nThe first player to score three signatures in a row is the winner" +
+                              "\nGood luck players! \nNow press any key to begin...");
+            Console.ReadKey();
+            
+            Console.Clear();
+        
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.BackgroundColor = ConsoleColor.White;
+            Console.WriteLine("Enter Player 1's name:");
+            player1Name = Console.ReadLine();
+            Console.ResetColor();
+
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.BackgroundColor = ConsoleColor.White;
+            Console.WriteLine("Enter Player 2's name:");
+            player2Name = Console.ReadLine();
+            Console.ResetColor();
+
+            bool restart = true;
+
+
+while (restart)
+            {
+                // Reset game state
+                player = 1;
+                flag = 0;
+                Array.Fill(arr, ' ');
+
+                do
+                {
+                    Console.Clear();
+                    Console.WriteLine($"{player1Name}: X ({player1Score}) and {player2Name}: O ({player2Score})");
+                    Console.WriteLine("\n");
+
+                    if (player % 2 == 0)
+                    {
+                        Console.WriteLine($"{player2Name}'s turn");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"{player1Name}'s turn");
+                    }
+
+                    Console.WriteLine($"Time remaining: {timerDuration} seconds");
+                    Console.WriteLine("\n");
+                    DisplayBoard();
+
+
+    var timer = new Timer(TimerCallback, null, 1000 * timerDuration, Timeout.Infinite);
+                    GetPlayerMove(out choice);
+                    timer.Dispose();
+
+                    if (arr[choice] != 'X' && arr[choice] != 'O')
+                    {
+                        if (player % 2 == 0)
+                        {
+                            arr[choice] = 'O';
+                            player++;
+                        }
+                        else
+                        {
+                            arr[choice] = 'X';
+                            player++;
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Sorry, the cell {choice} is already marked with {arr[choice]}");
+                        Console.WriteLine("\nPlease wait 2 seconds. The board is loading again.....");
+                        Thread.Sleep(2000);
+                    }
+
+                    flag = CheckWin();
+                } while (flag != 1 && flag != -1);
+
+                Console.Clear();
+                DisplayBoard();
+
+                if (flag == 1)
+                {
+                    Console.WriteLine($"{(player % 2 == 0 ? player1Name : player2Name)} wins!");
+                    UpdateScore();
+                }
+                else
+                {
+                    Console.WriteLine("It's a draw!");
+                }
+
+                Console.WriteLine($"Score: {player1Name} ({player1Score}) - {player2Name} ({player2Score})");
+
+                Console.WriteLine("Do you want to play again? (Y/N)");
+                char response = char.ToUpper(Console.ReadKey().KeyChar);
+                restart = (response == 'Y');
+            }
+        }
+
+        private static void TimerCallback(object state)
+        {
+            Console.Clear();
+            DisplayBoard();
+            if (flag == 1)
+            {
+            Console.WriteLine($"Time's up! {(player % 2 == 0 ? player1Name : player2Name)} wins!");
+            UpdateScore();
+            }
+            else            {
+                Console.WriteLine("It's a draw");
+            }
+        }    
+
+        private static void GetPlayerMove(out int move)
+        {
+            ConsoleKeyInfo key;
+            DateTime startTime = DateTime.Now;
+
+
+     do
+            {
+                if (Console.KeyAvailable)
+                {
+                    key = Console.ReadKey(true);
+
+
+if (key.Key == ConsoleKey.D1 || key.Key == ConsoleKey.D2 || key.Key == ConsoleKey.D3 ||
+                        key.Key == ConsoleKey.D4 || key.Key == ConsoleKey.D5 || key.Key == ConsoleKey.D6 ||
+                        key.Key == ConsoleKey.D7 || key.Key == ConsoleKey.D8 || key.Key == ConsoleKey.D9)
+                    {
+                        move = int.Parse(key.KeyChar.ToString());
+                        return;
+                    }
+                }
+
+                if ((DateTime.Now - startTime).TotalSeconds >= timerDuration)
+                {
+                    Console.Clear();
+                    DisplayBoard();
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine($"Time's up!");
+                    Console.ResetColor();
+                    flag = 1;
+                
+                    
+                    Thread.Sleep(2000); // To allow the player to see the message
+                    move = 0; // To prevent the loop from continuing
+                    return;
+                }
+                
+
+                Thread.Sleep(100); // Sleep to reduce CPU usage
+
+            } while (true);
+        }
+
+        private static void DisplayBoard()
+{
+    Console.ForegroundColor = ConsoleColor.Green;
+    Console.WriteLine("  _________ _________ _________  ");
+    Console.WriteLine(" |1        |2        |3        | ");
+    Console.WriteLine($" |    {arr[1]}    |    {arr[2]}    |    {arr[3]}    | ", arr[1], arr[2], arr[3]);
+    Console.WriteLine(" |_________|_________|_________| ");
+    Console.WriteLine(" |4        |5        |6        | ");
+    Console.WriteLine($" |    {arr[4]}    |    {arr[5]}    |    {arr[6]}    | ", arr[4], arr[5], arr[6]);
+    Console.WriteLine(" |_________|_________|_________| ");
+    Console.WriteLine(" |7        |8        |9        | ");
+    Console.WriteLine($" |    {arr[7]}    |    {arr[8]}    |    {arr[9]}    | ", arr[7], arr[8], arr[9]);
+    Console.WriteLine(" |_________|_________|_________| ");
+}
+
+private static int CheckWin()
+        {
+            // Horizontal Winning Conditions
+            if (arr[1] == arr[2] && arr[2] == arr[3] && arr[1] != ' ') return 1;
+            else if (arr[4] == arr[5] && arr[5] == arr[6] && arr[4] != ' ') return 1;
+            else if (arr[7] == arr[8] && arr[8] == arr[9] && arr[7] != ' ') return 1;
+
+            // Vertical Winning Conditions
+            else if (arr[1] == arr[4] && arr[4] == arr[7] && arr[1] != ' ') return 1;
+            else if (arr[2] == arr[5] && arr[5] == arr[8] && arr[2] != ' ') return 1;
+            else if (arr[3] == arr[6] && arr[6] == arr[9] && arr[3] != ' ') return 1;
+
+            // Diagonal Winning Conditions
+            else if (arr[1] == arr[5] && arr[5] == arr[9] && arr[1] != ' ') return 1;
+            else if (arr[3] == arr[5] && arr[5] == arr[7] && arr[3] != ' ') return 1;
+
+            // Check for Draw
+            else if (!arr.Any(c => c == ' ')) return -1;
+
+
+else return 0;
+        }
+
+        private static void UpdateScore()
+        {
+            if (flag == 1)
+            {
+                if (player % 2 == 0)
+                {
+                    player1Score++;
+                }
+                else
+                {
+                    player2Score++;
+                }
+            }
+        }
+    }
+}
